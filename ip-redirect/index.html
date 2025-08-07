@@ -1,18 +1,35 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Redirecionando...</title>
-    <script>
-      fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-          const ip = data.ip;
-          window.location.href = `https://tally.so/r/3x5865?ip=${ip}`;
-        });
-    </script>
-  </head>
-  <body>
-    <p>Estamos a redirecionar para o formulário... Aguarde.</p>
-  </body>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecionar com IP</title>
+  <script>
+    async function getIPAndRedirect() {
+      try {
+        const response = await fetch("https://api.ipify.org?format=json");
+        const data = await response.json();
+        const ip = data.ip;
+
+        // URL base de redirecionamento
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get("redirect");
+
+        if (redirectUrl) {
+          const finalUrl = `${redirectUrl}?ip=${ip}`;
+          window.location.href = finalUrl;
+        } else {
+          document.body.innerHTML = "<h2>URL de redirecionamento inválida.</h2>";
+        }
+      } catch (err) {
+        console.error("Erro ao obter IP:", err);
+        document.body.innerHTML = "<h2>Erro ao obter o IP.</h2>";
+      }
+    }
+
+    window.onload = getIPAndRedirect;
+  </script>
+</head>
+<body>
+  <p>A redirecionar...</p>
+</body>
 </html>
