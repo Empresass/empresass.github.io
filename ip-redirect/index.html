@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Redirecionando...</title>
+    <script>
+      fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+          const ip = data.ip;
+          window.location.href = `https://tally.so/r/3x5865?ip=${ip}`;
+        });
+    </script>
+  </head>
+  <body>
+    <p>Estamos a redirecionar para o formulário... Aguarde.</p>
+  </body>
+</html>
