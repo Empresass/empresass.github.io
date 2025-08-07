@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Verificação de Token</title>
+  <script>
+    async function verificarToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+
+      if (!token) {
+        document.body.innerHTML = "<h2>Token inválido.</h2>";
+        return;
+      }
+
+      // Substitui aqui pelo teu URL do Apps Script
+      const baseUrl = "https://script.google.com/macros/s/AKfycbyd04i-rNj--jLBgP_QyrkkpOPfJNbExuDJLU1ImRglHd1dT58vZ8LSzHgGJwICIyOUUg/exec";
+
+      try {
+        // Verifica o estado do token
+        const resposta = await fetch(`${baseUrl}?token=${token}`);
+        const dados = await resposta.json();
+
+        if (dados.status === "ativo") {
+          // Atualiza para "usado"
+          await fetch(`${baseUrl}?token=${token}&action=update`);
+
+          // Redireciona com IP
+          window.location.href = "https://empresass.github.io/ip-redirect/?redirect=https://tally.so/r/3x5865";
+        } else {
+          document.body.innerHTML = "<h2>Este link já foi usado ou está inválido.</h2>";
+        }
+      } catch (e) {
+        document.body.innerHTML = "<h2>Erro ao verificar o token.</h2>";
+      }
+    }
+
+    window.onload = verificarToken;
+  </script>
+</head>
+<body>
+  <p>A verificar o seu acesso...</p>
+</body>
+</html>
