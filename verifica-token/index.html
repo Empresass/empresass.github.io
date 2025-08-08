@@ -13,12 +13,14 @@
         return;
       }
 
-      // Substitui aqui pelo teu URL do Apps Script
+      // URL gerado pelo Apps Script quando fazes Deploy como Web App
       const baseUrl = "https://script.google.com/macros/s/AKfycbyd04i-rNj--jLBgP_QyrkkpOPfJNbExuDJLU1ImRglHd1dT58vZ8LSzHgGJwICIyOUUg/exec";
 
       try {
         // Verifica o estado do token
         const resposta = await fetch(`${baseUrl}?token=${token}`);
+        if (!resposta.ok) throw new Error("Falha na ligação ao servidor");
+
         const dados = await resposta.json();
 
         if (dados.status === "ativo") {
@@ -31,6 +33,7 @@
           document.body.innerHTML = "<h2>Este link já foi usado ou está inválido.</h2>";
         }
       } catch (e) {
+        console.error(e);
         document.body.innerHTML = "<h2>Erro ao verificar o token.</h2>";
       }
     }
