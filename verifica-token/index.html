@@ -1,47 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8">
   <title>Verificação de Token</title>
-  <script>
-    async function verificarToken() {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get("token");
-
-      if (!token) {
-        document.body.innerHTML = "<h2>Token inválido.</h2>";
-        return;
-      }
-
-      // URL gerado pelo Apps Script quando fazes Deploy como Web App
-      const baseUrl = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhRKL5a-bgqDp6R3S3dSW19ke3cTx6gLGpgVlvsfn_FDg7pfa5TCqF0PWyxe_g_j5Mrq7xD7dIb_LJFWcn-9hoCcy6TgKTv5lUltFbTI9qJ1GvFJTuRxfYEtF2B8VHOyonGOQMBLTWkNAGiq2TjxI3jMil4wtAKboVSrAGe_SeaJ9aSgzM83RNjfvztuMcOrowR4raCy7XqBBFlSTkWZpwSfZVlyl3I7VgtSeGPm4Jv5dCl84tC-GqyV9uMDOB2HFQ6jP-HYW90gve26ZaSWiFONW5IRVGZk4kQe7aKifNWcpLEYiI&lib=MArxbcIQCZAEItZh68EeMScTlH9Jryd6c";
-
-      try {
-        // Verifica o estado do token
-        const resposta = await fetch(`${baseUrl}?token=${token}`);
-        if (!resposta.ok) throw new Error("Falha na ligação ao servidor");
-
-        const dados = await resposta.json();
-
-        if (dados.status === "ativo") {
-          // Atualiza para "usado"
-          await fetch(`${baseUrl}?token=${token}&action=update`);
-
-          // Redireciona com IP
-          window.location.href = "https://empresass.github.io/ip-redirect/?redirect=https://tally.so/r/3x5865";
-        } else {
-          document.body.innerHTML = "<h2>Este link já foi usado ou está inválido.</h2>";
-        }
-      } catch (e) {
-        console.error(e);
-        document.body.innerHTML = "<h2>Erro ao verificar o token.</h2>";
-      }
-    }
-
-    window.onload = verificarToken;
-  </script>
 </head>
 <body>
   <p>A verificar o seu acesso...</p>
+
+<script>
+(async function(){
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (!token) {
+    document.body.innerHTML = '<h2>Token inválido.</h2>';
+    return;
+  }
+
+  // <-- substitui pelo teu Web App exec URL (ex: https://script.google.com/macros/s/AKfy.../exec)
+  const baseUrl = 'https://script.google.com/macros/s/AKfycbzoLSeWubGcN2k4BhF0sfSWiDgnI7wn0rgIvoWQPzsXSCdWPM1A4EOO7TWZTuDLwLiGgw/exec';
+
+  // Função que lida com o resultado vindo do servidor
+  function handleResult(data) {
+    if (!data || !data.status) {
+      document.body.innerHTML = '<h2>Erro ao verificar o token.</h2>';
+      return;
+    }
+    // status "ativo" -> atualizar state e redirecionar
+    if (String(data.status).toLowerCase() === 'ativo') {
+      // marcar como usado via JSONP (evita problemas CORS)
+      const s = document.createElement('script');
+      s.src = `${baseUrl}?token=${encodeURIComponent(token)}&action=update&callback=__updateDone`;
+      document.body.appendChild(s);
+
+      window.__updateDone = function(res) {
+        // redireciona para o ip-redirect que adiciona o ip e leva ao tally
+        window.location.href = 'https://empresass.github.io/ip-redirect/?redirect=https://tally.so/r/3x5865';
+      };
+      return;
+    }
+
+    // se já usado ou inválido
+    if (String(data.status).toLowerCase() === 'usado' || String(data.status).toLowerCase() === 'invalido') {
+      document.body.innerHTML = '<h2>Este link já foi usado ou está inválido.</h2>';
+      return;
+    }
+
+    // outros estados
+    document.body.innerHTML = '<h2>Estado: ' + String(data.status) + '</h2>';
+  }
+
+  // 1) Tenta fetch normal (pode falhar por CORS)
+  try {
+    const res = await fetch(`${baseUrl}?token=${encodeURIComponent(token)}`);
+    if (res.ok) {
+      const data = await res.json();
+      handleResult(data);
+      return;
+    }
+    // se não ok, fallback para JSONP abaixo
+  } catch (err) {
+    // fetch falhou (provável CORS) → vamos para JSONP
+  }
+
+  // 2) JSONP fallback (sempre funciona): cria <script src="...&callback=__jsonp">
+  window.__jsonpCallback = function(data) {
+    handleResult(data);
+    // cleanup
+    try { delete window.__jsonpCallback; } catch(e){}
+  };
+  const script = document.createElement('script');
+  script.src = `${baseUrl}?token=${encodeURIComponent(token)}&callback=__jsonpCallback`;
+  script.onerror = function() { document.body.innerHTML = '<h2>Erro ao verificar o token.</h2>'; };
+  document.body.appendChild(script);
+
+})();
+</script>
 </body>
 </html>
